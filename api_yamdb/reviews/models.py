@@ -12,7 +12,6 @@ class Category(models.Model):
     slug = models.SlugField(
         max_length=50,
         unique=True,
-        validators=[validate_slug, ],
         verbose_name='Slug категории'
     )
 
@@ -34,7 +33,6 @@ class Genre(models.Model):
     slug = models.SlugField(
         max_length=50,
         unique=True,
-        validators=[validate_slug, ],
         verbose_name='Slug жанра'
     )
 
