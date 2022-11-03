@@ -1,5 +1,5 @@
 from django.db import models
-from django.core.validators import MaxValueValidator, validate_slug
+from django.core.validators import MaxValueValidator
 from django.utils import timezone
 
 
