@@ -1,8 +1,38 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets
+from rest_framework import mixins, filters, viewsets
 
-from api.serializers import CommentSerializer, ReviewSerializer
-from reviews.models import Title, Review, Comment
+from api.serializers import (CategorySerializer, GenreSerializer,
+                             TitleSerializer, CommentSerializer,
+                             ReviewSerializer)
+from reviews.models import Category, Genre, Title, Review, Comment
+
+
+class CreateListDestroyViewSet(mixins.CreateModelMixin,
+                               mixins.ListModelMixin,
+                               mixins.DestroyModelMixin,
+                               viewsets.GenericViewSet):
+    pass
+
+
+class CategoryViewSet(CreateListDestroyViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    filter_backends = [filters.SearchFilter]
+    lookup_field = 'slug'
+    search_fields = ['name', ]
+
+
+class GenreViewSet(CreateListDestroyViewSet):
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
+    filter_backends = [filters.SearchFilter]
+    lookup_field = 'slug'
+    search_fields = ['name', ]
+
+
+class TitleViewSet(viewsets.ModelViewSet):
+    queryset = Title.objects.all()
+    serializer_class = TitleSerializer
 
 from rest_framework import status
 from rest_framework.permissions import AllowAny
