@@ -4,7 +4,7 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
-
+from django.contrib.auth.views import LoginView, LogoutView, PasswordResetView
 from api.views import CommentViewSet, ReviewViewSet
 
 router_v1 = DefaultRouter()
@@ -22,5 +22,6 @@ urlpatterns = [
     path('v1/', include(router_v1.urls)),
     path('v1/auth/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('v1/token/auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('v1/auth/', include('django.contrib.auth.urls')), 
+    path('v1/auth/', include('django.contrib.auth.urls')),
+    # path('signup/', views.SignUp.as_view(), name='signup'),
 ]
