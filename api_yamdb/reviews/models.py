@@ -118,6 +118,11 @@ class Review(models.Model):
     text = models.TextField(
         'Текст'
     )
+    score = models.IntegerField(
+        null=True,
+        default=None,
+        verbose_name='Оценка'
+    )
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
