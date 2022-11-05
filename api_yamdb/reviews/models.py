@@ -72,11 +72,6 @@ class Title(models.Model):
         related_name='titles',
         verbose_name='Жанр'
     )
-    rating = models.IntegerField(
-        null=True,
-        default=None,
-        verbose_name='Рейтинг'
-    )
     description = models.TextField(
         blank=True,
         verbose_name='Описание'
