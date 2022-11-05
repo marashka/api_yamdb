@@ -4,7 +4,7 @@ from django.db import models
 from django.utils import timezone
 
 User = get_user_model()
-TEXT_TITLE_LENGHT = 15
+TEXT_TITLE_LENGTH = 15
 
 
 class Category(models.Model):
@@ -147,7 +147,7 @@ class Review(models.Model):
         verbose_name_plural = 'Отзывы'
 
     def __str__(self):
-        return str(self.text[:TEXT_TITLE_LENGHT])
+        return str(self.text[:TEXT_TITLE_LENGTH])
 
 
 class Comment(models.Model):
@@ -179,4 +179,4 @@ class Comment(models.Model):
         verbose_name_plural = 'Комментарии'
 
     def __str__(self):
-        return str(self.text[:TEXT_TITLE_LENGHT])
+        return str(self.text[:TEXT_TITLE_LENGTH])
