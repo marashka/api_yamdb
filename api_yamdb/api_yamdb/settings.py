@@ -90,7 +90,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 
-LANGUAGE_CODE = 'ru-ru'
+LANGUAGE_CODE = 'EN-EN'
 
 TIME_ZONE = 'UTC'
 
@@ -109,7 +109,6 @@ STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static/'),)
 
 
 AUTH_USER_MODEL = 'users.User'
-<<<<<<< HEAD
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
@@ -125,5 +124,8 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
-=======
->>>>>>> master
+
+EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
+
+YMDb_EMAIaL = 'admin@yamdb.ru'

@@ -10,7 +10,8 @@ from api.views import CommentViewSet, ReviewViewSet
 
 from api.views import (CategoryViewSet, GenreViewSet,
                        TitleViewSet, CommentViewSet,
-                       ReviewViewSet)
+                       ReviewViewSet, SignUp, MyTokenObtainPairView,
+                       UserViewSet)
 
 router_v1 = DefaultRouter()
 
@@ -39,11 +40,16 @@ router_v1.register(
     CommentViewSet,
     basename='comments'
 )
+router_v1.register(
+    'users',
+    UserViewSet,
+    basename='users'
+)
 
 urlpatterns = [
     path('v1/', include(router_v1.urls)),
-    path('v1/auth/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('v1/token/auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('v1/auth/', include('django.contrib.auth.urls')),
-    # path('signup/', views.SignUp.as_view(), name='signup'),
+    path('v1/auth/signup/', SignUp.as_view(), name='signup'),
+    path('v1/auth/token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('v1/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
+
