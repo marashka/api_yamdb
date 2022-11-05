@@ -1,10 +1,10 @@
 from django.contrib.auth import get_user_model
-from django.core.validators import MaxValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
 
 User = get_user_model()
-TEXT_TITLE_LENGHT = 15
+TEXT_TITLE_LENGTH = 15
 
 
 class Category(models.Model):
@@ -72,11 +72,6 @@ class Title(models.Model):
         related_name='titles',
         verbose_name='Жанр'
     )
-    rating = models.IntegerField(
-        null=True,
-        default=None,
-        verbose_name='Рейтинг'
-    )
     description = models.TextField(
         blank=True,
         verbose_name='Описание'
@@ -121,7 +116,8 @@ class Review(models.Model):
     score = models.IntegerField(
         null=True,
         default=None,
-        verbose_name='Оценка'
+        verbose_name='Оценка',
+        validators=[MaxValueValidator(10), MinValueValidator(1)]
     )
     author = models.ForeignKey(
         User,
@@ -147,7 +143,7 @@ class Review(models.Model):
         verbose_name_plural = 'Отзывы'
 
     def __str__(self):
-        return str(self.text[:TEXT_TITLE_LENGHT])
+        return str(self.text[:TEXT_TITLE_LENGTH])
 
 
 class Comment(models.Model):
@@ -179,4 +175,4 @@ class Comment(models.Model):
         verbose_name_plural = 'Комментарии'
 
     def __str__(self):
-        return str(self.text[:TEXT_TITLE_LENGHT])
+        return str(self.text[:TEXT_TITLE_LENGTH])

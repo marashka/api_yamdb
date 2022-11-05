@@ -57,7 +57,6 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=256, verbose_name='Название')),
                 ('year', models.IntegerField(validators=[django.core.validators.MaxValueValidator(2022)], verbose_name='Год выпуска')),
-                ('rating', models.IntegerField(default=None, null=True, verbose_name='Рейтинг')),
                 ('description', models.TextField(blank=True, verbose_name='Описание')),
                 ('category', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='titles', to='reviews.Category', verbose_name='Категория')),
                 ('genre', models.ManyToManyField(related_name='titles', through='reviews.GenreTitle', to='reviews.Genre', verbose_name='Жанр')),
