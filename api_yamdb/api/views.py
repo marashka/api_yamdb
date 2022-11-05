@@ -1,12 +1,20 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import mixins, filters, viewsets
-
+from rest_framework import mixins, filters, viewsets, generics, status
+from rest_framework.response import Response
+from django.contrib.auth.tokens import default_token_generator
+from rest_framework.permissions import AllowAny
+from django.core.mail import send_mail
+from django.core.mail import EmailMessage
+from api_yamdb.settings import YMDb_EMAIaL
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
 from api.serializers import (CategorySerializer, GenreSerializer,
                              TitleSerializer, CommentSerializer,
-                             ReviewSerializer)
+                             ReviewSerializer, SignupSerializer, UserSerializer, 
+                             MyTokenObtainPairSerializer)
 from reviews.models import Category, Genre, Title, Review, Comment
 
-
+from users.models import User
 class CreateListDestroyViewSet(mixins.CreateModelMixin,
                                mixins.ListModelMixin,
                                mixins.DestroyModelMixin,
@@ -59,3 +67,42 @@ class CommentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         review = get_object_or_404(Review, pk=self.kwargs.get('review_id'))
         serializer.save(author=self.request.user, review=review)
+
+
+class SignUp(generics.CreateAPIView):
+    serializer_class = SignupSerializer
+    permission_classes = (AllowAny,)
+    queryset = User.objects.all()
+
+    def perform_create(self, serializer):
+        user = User.objects.create_user(**serializer.validated_data)
+        confirmation_code = default_token_generator.make_token(user)
+        subject = 'Код потверждения YaMDb'
+        message = f'Код для получения JWT токена: {confirmation_code}'
+        recipient_list = (user.email,)
+        send_mail(
+            subject=subject,
+            message=message,
+            recipient_list=recipient_list,
+            from_email=YMDb_EMAIaL
+        )
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK,
+            headers=headers
+        )
+
+
+class MyTokenObtainPairView(TokenObtainPairView):
+    serializer_class = MyTokenObtainPairSerializer
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    serializer_class = UserSerializer
+    queryset = User.objects.all()
