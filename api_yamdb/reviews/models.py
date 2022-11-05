@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.core.validators import MaxValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
 
@@ -121,7 +121,8 @@ class Review(models.Model):
     score = models.IntegerField(
         null=True,
         default=None,
-        verbose_name='Оценка'
+        verbose_name='Оценка',
+        validators=[MaxValueValidator(10), MinValueValidator(1)]
     )
     author = models.ForeignKey(
         User,
