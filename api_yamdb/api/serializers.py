@@ -23,11 +23,23 @@ class GenreSerializer(serializers.ModelSerializer):
         fields = ('name', 'slug')
 
 
+class CategoryRelatedField(serializers.SlugRelatedField):
+    def to_representation(self, value):
+        serializer = CategorySerializer(value)
+        return serializer.data
+
+
+class GenreRelatedField(serializers.SlugRelatedField):
+    def to_representation(self, value):
+        serializer = GenreSerializer(value)
+        return serializer.data
+
+
 class TitleSerializer(serializers.ModelSerializer):
-    category = serializers.SlugRelatedField(
+    category = CategoryRelatedField(
         slug_field='slug', queryset=Category.objects.all()
     )
-    genre = serializers.SlugRelatedField(
+    genre = GenreRelatedField(
         slug_field='slug', many=True, queryset=Genre.objects.all()
     )
     rating = serializers.SerializerMethodField()
@@ -45,8 +57,9 @@ class TitleSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    author = serializers.SlugRelatedField(slug_field='username',
-                                          read_only=True)
+    author = serializers.SlugRelatedField(
+        slug_field='username', read_only=True
+    )
     score = serializers.IntegerField(
         validators=(MinValueValidator(1), MaxValueValidator(10))
     )
@@ -57,8 +70,9 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    author = serializers.SlugRelatedField(slug_field='username',
-                                          read_only=True)
+    author = serializers.SlugRelatedField(
+        slug_field='username', read_only=True
+    )
 
     class Meta:
         fields = ('id', 'text', 'author', 'pub_date')

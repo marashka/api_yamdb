@@ -1,12 +1,9 @@
+from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import get_object_or_404
+from django.core.mail import send_mail
 from rest_framework import mixins, filters, viewsets, generics, status
 from rest_framework.response import Response
-from django.contrib.auth.tokens import default_token_generator
-from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
-from django.core.mail import send_mail
-from django.core.mail import EmailMessage
-from api_yamdb.settings import YMDb_EMAIaL
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -16,7 +13,10 @@ from api.serializers import (CategorySerializer, GenreSerializer,
                              UserSerializer, MyTokenObtainPairSerializer)
 from reviews.models import Category, Genre, Title, Review, Comment
 from users.models import User
-from .filters import TitleFilter
+from api.permissions import (IsAdmin, IsModerator,
+                             IsAuthorOrReadOnly, IsReadOnly)
+from api.filters import TitleFilter
+from api_yamdb.settings import YMDb_EMAIaL
 
 
 class CreateListDestroyViewSet(mixins.CreateModelMixin,
@@ -33,8 +33,7 @@ class CategoryViewSet(CreateListDestroyViewSet):
     filter_backends = [filters.SearchFilter]
     lookup_field = 'slug'
     search_fields = ['name', ]
-    # надо сделать пермишны по типу IsAdmin и ReadOnly
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAdmin | IsReadOnly]
 
 
 class GenreViewSet(CreateListDestroyViewSet):
@@ -44,8 +43,7 @@ class GenreViewSet(CreateListDestroyViewSet):
     filter_backends = [filters.SearchFilter]
     lookup_field = 'slug'
     search_fields = ['name', ]
-    # надо сделать пермишны по типу IsAdmin и ReadOnly
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAdmin | IsReadOnly]
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -54,14 +52,12 @@ class TitleViewSet(viewsets.ModelViewSet):
     serializer_class = TitleSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_class = TitleFilter
-    # надо сделать пермишны по типу IsAdmin и ReadOnly
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAdmin | IsReadOnly]
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
-    # надо сделать пермишны по типу IsAdmin, IsModerator, IsAuthor и ReadOnly
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAdmin | IsModerator | IsAuthorOrReadOnly]
 
     def get_queryset(self):
         title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
@@ -75,8 +71,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
-    # надо сделать пермишны по типу IsAdmin, IsModerator, IsAuthor и ReadOnly
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAdmin | IsModerator | IsAuthorOrReadOnly]
 
     def get_queryset(self):
         review = get_object_or_404(Review, pk=self.kwargs.get('review_id'))
@@ -125,3 +120,5 @@ class MyTokenObtainPairView(TokenObtainPairView):
 class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     queryset = User.objects.all()
+    lookup_field = 'username'
+    permission_classes = [IsAdmin]
