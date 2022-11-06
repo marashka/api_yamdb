@@ -2,19 +2,23 @@ from django.shortcuts import get_object_or_404
 from rest_framework import mixins, filters, viewsets, generics, status
 from rest_framework.response import Response
 from django.contrib.auth.tokens import default_token_generator
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
 from django.core.mail import send_mail
 from django.core.mail import EmailMessage
 from api_yamdb.settings import YMDb_EMAIaL
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
+from django_filters.rest_framework import DjangoFilterBackend
+
 from api.serializers import (CategorySerializer, GenreSerializer,
                              TitleSerializer, CommentSerializer,
-                             ReviewSerializer, SignupSerializer, UserSerializer, 
-                             MyTokenObtainPairSerializer)
+                             ReviewSerializer, SignupSerializer,
+                             UserSerializer, MyTokenObtainPairSerializer)
 from reviews.models import Category, Genre, Title, Review, Comment
-
 from users.models import User
+from .filters import TitleFilter
+
+
 class CreateListDestroyViewSet(mixins.CreateModelMixin,
                                mixins.ListModelMixin,
                                mixins.DestroyModelMixin,
@@ -23,28 +27,41 @@ class CreateListDestroyViewSet(mixins.CreateModelMixin,
 
 
 class CategoryViewSet(CreateListDestroyViewSet):
+    """Админ может создавать категории, остальные только просматривать."""
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     filter_backends = [filters.SearchFilter]
     lookup_field = 'slug'
     search_fields = ['name', ]
+    # надо сделать пермишны по типу IsAdmin и ReadOnly
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
 
 class GenreViewSet(CreateListDestroyViewSet):
+    """Админ может создавать жанры, остальные только просматривать."""
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     filter_backends = [filters.SearchFilter]
     lookup_field = 'slug'
     search_fields = ['name', ]
+    # надо сделать пермишны по типу IsAdmin и ReadOnly
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
 
 class TitleViewSet(viewsets.ModelViewSet):
+    """Админ может создавать тайтлы, остальные только просматривать."""
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = TitleFilter
+    # надо сделать пермишны по типу IsAdmin и ReadOnly
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
+    # надо сделать пермишны по типу IsAdmin, IsModerator, IsAuthor и ReadOnly
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
         title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
@@ -58,6 +75,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
+    # надо сделать пермишны по типу IsAdmin, IsModerator, IsAuthor и ReadOnly
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
         review = get_object_or_404(Review, pk=self.kwargs.get('review_id'))

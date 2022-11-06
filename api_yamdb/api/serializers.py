@@ -124,4 +124,3 @@ class UserSerializer(serializers.ModelSerializer):
                 'Нелья создать пользователя с именем "me".'
             )
         return value
-
