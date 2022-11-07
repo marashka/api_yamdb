@@ -2,8 +2,8 @@ POST http://127.0.0.1:8000/api/v1/auth/signup/
 Content-Type: application/json
 
 {
-    "username": "mastsgdssa3saat228",
-    "email": "ah3smtssagdsetaov.marat2015@yandex.ru"
+    "username": "mbe",
+    "email": "ahol3dssgzehhhmjessfdphhtsdgdssetaov.marat2015@yandex.ru"
 }
 
 ###
@@ -11,11 +11,24 @@ POST http://127.0.0.1:8000/api/v1/auth/token/
 Content-Type: application/json
 
 {
-    "username": "mastsgdsa3saat228",
-    "confirmation_code": "65n-5a002c4880905ec63f40"
+    "username": "mbe",
+    "confirmation_code": "65o-7a82278f340727198bcb"
 
 }
 
 ###
 GET http://127.0.0.1:8000/api/v1/users/marat
 Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjY3NzcyMDcwLCJpYXQiOjE2Njc2ODU2NzAsImp0aSI6IjY1ZTRjYTM2ZGIyNzQ3YjU4ZGM5YTFiYzQ2ZGEyYzY1IiwidXNlcl9pZCI6NDV9.3R7gUs7qdBHCgesq0CDRLI2arLepbB7Gaox6ZvTiA5I
+
+###
+POST http://127.0.0.1:8000/api/v1/users/me/
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjY3OTEwMzc2LCJpYXQiOjE2Njc4MjM5NzYsImp0aSI6IjVkZTFmZDI3MTVhNjQzYmM4MjNiN2RjOWE1ZmMwZjQ4IiwidXNlcl9pZCI6Njl9.u-zgRvYgSIR17azs9iyhyjbP8YY2rH7mYZGCP0jN_uI
+Content-Type: application/json
+
+{
+    "username": "mgbhjhee",
+    "email": "65o-7ae8g227j8f340727198bcb@er.ri",
+    "role": "usjer"
+
+}
+

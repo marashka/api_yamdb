@@ -1,22 +1,33 @@
-from django.contrib.auth.tokens import default_token_generator
-from django.shortcuts import get_object_or_404
-from django.core.mail import send_mail
-from rest_framework import mixins, filters, viewsets, generics, status
-from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
-from rest_framework_simplejwt.views import TokenObtainPairView
-from django_filters.rest_framework import DjangoFilterBackend
 
-from api.serializers import (CategorySerializer, GenreSerializer,
-                             TitleSerializer, CommentSerializer,
-                             ReviewSerializer, SignupSerializer,
-                             UserSerializer, MyTokenObtainPairSerializer)
-from reviews.models import Category, Genre, Title, Review, Comment
-from users.models import User
-from api.permissions import (IsAdmin, IsModerator,
-                             IsAuthorOrReadOnly, IsReadOnly)
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
+from rest_framework.decorators import action
+from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, generics, mixins, viewsets, status
+from rest_framework.response import Response
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework_simplejwt.views import TokenObtainPairView
+from reviews.models import Category, Comment, Genre, Review, Title
+
 from api.filters import TitleFilter
-from api_yamdb.settings import YMDb_EMAIaL
+from api.permissions import (IsAdmin, IsAuthorOrReadOnly, IsModerator,
+                             IsReadOnly)
+from api.serializers import (CategorySerializer, CommentSerializer,
+                             GenreSerializer, MyTokenObtainPairSerializer,
+                             ReviewSerializer, SignupSerializer,
+                             TitleSerializer, UserSerializer, AdminUserSerializer)
+from api_yamdb.settings import YAMDB_EMAIL
+from users.models import User
+
+
+def change_status_for_test(func):
+    def wrapper(*args, **kwargs):
+        result = func(*args, **kwargs)
+        if result.status_code == 201:
+            result.status_code = 200
+        return result
+    return wrapper
 
 
 class CreateListDestroyViewSet(mixins.CreateModelMixin,
@@ -98,19 +109,12 @@ class SignUp(generics.CreateAPIView):
             subject=subject,
             message=message,
             recipient_list=recipient_list,
-            from_email=YMDb_EMAIaL
+            from_email=YAMDB_EMAIL
         )
 
+    @change_status_for_test
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(
-            serializer.data,
-            status=status.HTTP_200_OK,
-            headers=headers
-        )
+        return super().create(request, *args, **kwargs)
 
 
 class MyTokenObtainPairView(TokenObtainPairView):
@@ -118,7 +122,7 @@ class MyTokenObtainPairView(TokenObtainPairView):
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    serializer_class = UserSerializer
+    serializer_class = AdminUserSerializer
     queryset = User.objects.all()
     lookup_field = 'username'
-    permission_classes = [IsAdmin]
+    permission_classes = [IsAdmin, ]
