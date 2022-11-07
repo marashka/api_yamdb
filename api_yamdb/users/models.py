@@ -1,9 +1,23 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from .manager import MyUserManager
+from django.core import validators
+from django.utils.deconstruct import deconstructible
+from django.utils.translation import gettext_lazy as _
+
+
+@deconstructible
+class CustomUsernameValidator(validators.RegexValidator):
+    regex = r'^(?!me\b)[\w.@+-]+$'
+    message = (
+        'Имя пользователя может содержать только буквы, цифры и символы '
+        '@/./+/-/_. Использовать имя "me" в качестве username запрещено'
+    )
+    flags = 0
 
 
 class User(AbstractUser):
+    username_validator = CustomUsernameValidator()
     USER = 'user'
     ADMIN = 'admin'
     MODERATOR = 'moderator'
@@ -12,7 +26,19 @@ class User(AbstractUser):
         (ADMIN, 'Администратор'),
         (MODERATOR, 'Модератор'),
     ]
-
+    username = models.CharField(
+        _('username'),
+        max_length=150,
+        unique=True,
+        help_text=_(
+            'Required. 150 characters or fewer. '
+            'Letters, digits and @/./+/-/_ only.'
+        ),
+        validators=[username_validator],
+        error_messages={
+            'unique': _("A user with that username already exists."),
+        },
+    )
     email = models.EmailField(
         unique=True,
         verbose_name='Адрес электронной почты',
@@ -32,7 +58,7 @@ class User(AbstractUser):
 
     @property
     def is_admin(self):
-        return self.role == self.ADMIN or (self.is_superuser and self.is_staff)
+        return self.role == self.ADMIN
 
     @property
     def is_user(self):

@@ -80,17 +80,9 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class SignupSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = User
         fields = ('username', 'email',)
-
-    def validate_username(self, value):
-        if value == 'me':
-            raise serializers.ValidationError(
-                'Нелья создать пользователя с именем "me".'
-            )
-        return value
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -125,16 +117,16 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = User
         fields = (
             'username', 'email', 'first_name', 'last_name', 'bio', 'role',
         )
 
-    def validate_username(self, value):
-        if value == 'me':
-            raise serializers.ValidationError(
-                'Нелья создать пользователя с именем "me".'
-            )
-        return value
+
+class AdminUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            'username', 'email', 'first_name', 'last_name', 'bio', 'role',
+        )
