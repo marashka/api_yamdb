@@ -58,7 +58,9 @@ class TitleSerializer(serializers.ModelSerializer):
 
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
-        slug_field='username', read_only=True
+        slug_field='username',
+        read_only=True,
+        default=serializers.CurrentUserDefault()
     )
     score = serializers.IntegerField(
         validators=(MinValueValidator(1), MaxValueValidator(10))
@@ -67,6 +69,20 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('id', 'text', 'author', 'score', 'pub_date')
         model = Review
+
+    def validate(self, data):
+        request = self.context.get('request')
+        title_id = self.context.get('view').kwargs.get('title_id')
+        title = get_object_or_404(Title, pk=title_id)
+        if request.method == 'POST':
+            if Review.objects.filter(
+                    author=request.user,
+                    title=title).exists():
+                raise serializers.ValidationError(
+                    'Нельзя сделать 2 отзыва на одно произведение!'
+                )
+
+        return data
 
 
 class CommentSerializer(serializers.ModelSerializer):
