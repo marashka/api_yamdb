@@ -1,9 +1,10 @@
 from django.contrib.auth.models import AbstractUser
-from django.db import models
-from .manager import MyUserManager
 from django.core import validators
+from django.db import models
 from django.utils.deconstruct import deconstructible
 from django.utils.translation import gettext_lazy as _
+
+from .manager import MyUserManager
 
 
 @deconstructible
@@ -36,7 +37,7 @@ class User(AbstractUser):
         ),
         validators=[username_validator],
         error_messages={
-            'unique': _("A user with that username already exists."),
+            'unique': _('A user with that username already exists.'),
         },
     )
     email = models.EmailField(
