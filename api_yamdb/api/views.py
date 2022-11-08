@@ -22,15 +22,6 @@ from .serializers import (AdminUserSerializer, CategorySerializer,
                           SignupSerializer, TitleSerializer, UserSerializer)
 
 
-def change_status_for_test(func):
-    def wrapper(*args, **kwargs):
-        result = func(*args, **kwargs)
-        if result.status_code == 201:
-            result.status_code = 200
-        return result
-    return wrapper
-
-
 class CreateListDestroyViewSet(mixins.CreateModelMixin,
                                mixins.ListModelMixin,
                                mixins.DestroyModelMixin,
