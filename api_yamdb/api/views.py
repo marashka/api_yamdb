@@ -1,33 +1,25 @@
 
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
-from rest_framework.decorators import action
 from django.shortcuts import get_object_or_404
+from annoying.functions import get_object_or_None
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, generics, mixins, viewsets, status
-from rest_framework.response import Response
+from rest_framework import filters, mixins, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
+
 from reviews.models import Category, Comment, Genre, Review, Title
-
-from api.filters import TitleFilter
-from api.permissions import (IsAdmin, IsAuthorOrReadOnly, IsModerator,
-                             IsReadOnly)
-from api.serializers import (CategorySerializer, CommentSerializer,
-                             GenreSerializer, MyTokenObtainPairSerializer,
-                             ReviewSerializer, SignupSerializer,
-                             TitleSerializer, UserSerializer, AdminUserSerializer)
-from api_yamdb.settings import YAMDB_EMAIL
 from users.models import User
-
-
-def change_status_for_test(func):
-    def wrapper(*args, **kwargs):
-        result = func(*args, **kwargs)
-        if result.status_code == 201:
-            result.status_code = 200
-        return result
-    return wrapper
+from api_yamdb.settings import YAMDB_EMAIL
+from .filters import TitleFilter
+from .permissions import IsAdmin, IsAuthorOrReadOnly, IsModerator, IsReadOnly
+from .serializers import (AdminUserSerializer, CategorySerializer,
+                          CommentSerializer, GenreSerializer,
+                          MyTokenObtainPairSerializer, ReviewSerializer,
+                          SignupSerializer, TitleSerializer, UserSerializer)
 
 
 class CreateListDestroyViewSet(mixins.CreateModelMixin,
@@ -72,8 +64,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
-        new_queryset = Review.objects.filter(title=title)
-        return new_queryset
+        return Review.objects.filter(title=title)
 
     def perform_create(self, serializer):
         title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
@@ -86,35 +77,31 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         review = get_object_or_404(Review, pk=self.kwargs.get('review_id'))
-        new_queryset = Comment.objects.filter(review=review)
-        return new_queryset
+        return Comment.objects.filter(review=review)
 
     def perform_create(self, serializer):
         review = get_object_or_404(Review, pk=self.kwargs.get('review_id'))
         serializer.save(author=self.request.user, review=review)
 
 
-class SignUp(generics.CreateAPIView):
-    serializer_class = SignupSerializer
-    permission_classes = (AllowAny,)
-    queryset = User.objects.all()
+class SignUpView(APIView):
+    permission_classes = [AllowAny]
 
-    def perform_create(self, serializer):
-        user = User.objects.create_user(**serializer.validated_data)
-        confirmation_code = default_token_generator.make_token(user)
-        subject = 'Код потверждения YaMDb'
-        message = f'Код для получения JWT токена: {confirmation_code}'
-        recipient_list = (user.email,)
-        send_mail(
-            subject=subject,
-            message=message,
-            recipient_list=recipient_list,
-            from_email=YAMDB_EMAIL
-        )
-
-    @change_status_for_test
-    def create(self, request, *args, **kwargs):
-        return super().create(request, *args, **kwargs)
+    def post(self, request):
+        serializer = SignupSerializer(data=request.data)
+        if serializer.is_valid():
+            user = User.objects.create_user(**serializer.validated_data)
+            send_confirmation_code(user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        user = get_object_or_None(User, **serializer.initial_data)
+        if user:
+            send_confirmation_code(user)
+            return Response(
+                'Данный пользователь уже зарегистрирован, '
+                'сообщение с кодом отправлено на указанную почту',
+                status=status.HTTP_200_OK
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class MyTokenObtainPairView(TokenObtainPairView):
@@ -125,4 +112,39 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = AdminUserSerializer
     queryset = User.objects.all()
     lookup_field = 'username'
-    permission_classes = [IsAdmin, ]
+    permission_classes = [IsAdmin]
+
+    def perform_create(self, serializer):
+        if not serializer.validated_data.get('role'):
+            # Тесты почему-то не пропускают, пришлось это условие добавить
+            serializer.validated_data['role'] = 'user'
+        User.objects.create_user(**serializer.validated_data)
+
+    @action(
+        detail=False, methods=['get', 'patch'],
+        url_path='me', url_name='me',
+        permission_classes=(IsAuthenticated,)
+    )
+    def me_profile(self, request):
+        serializer = UserSerializer(request.user)
+        if request.method == 'PATCH':
+            serializer = UserSerializer(
+                request.user, data=request.data, partial=True
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+def send_confirmation_code(user):
+    confirmation_code = default_token_generator.make_token(user)
+    subject = 'Код потверждения YaMDb'
+    message = f'Код для получения JWT токена: {confirmation_code}'
+    recipient_list = (user.email,)
+    return send_mail(
+        subject=subject,
+        message=message,
+        recipient_list=recipient_list,
+        from_email=YAMDB_EMAIL
+    )

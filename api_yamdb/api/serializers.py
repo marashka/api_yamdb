@@ -1,12 +1,12 @@
-from rest_framework import serializers, exceptions
+from django.contrib.auth.tokens import default_token_generator
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db.models import Avg
-
-from reviews.models import Category, Genre, Title, Review, Comment
-from users.models import User
 from django.shortcuts import get_object_or_404
-from django.contrib.auth.tokens import default_token_generator
+
+from rest_framework import exceptions, serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from reviews.models import Category, Comment, Genre, Review, Title
+from users.models import User
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -54,6 +54,7 @@ class TitleSerializer(serializers.ModelSerializer):
         rating = obj.reviews.aggregate(Avg('score')).get('score__avg')
         if rating:
             return round(rating, 1)
+        return rating
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -104,40 +105,37 @@ class SignupSerializer(serializers.ModelSerializer):
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["confirmation_code"] = self.fields.pop("password")
+        self.fields['confirmation_code'] = self.fields.pop('password')
 
     def validate(self, attrs):
         authenticate_kwargs = {
             self.username_field: attrs[self.username_field],
-            "confirmation_code": attrs["password"],
+            'confirmation_code': attrs['password'],
         }
         try:
-            authenticate_kwargs["request"] = self.context["request"]
+            authenticate_kwargs['request'] = self.context['request']
         except KeyError:
             pass
-        self.user = get_object_or_404(User, username=attrs.get("username"))
+        self.user = get_object_or_404(User, username=attrs.get('username'))
         if not default_token_generator.check_token(
             self.user,
-            authenticate_kwargs["confirmation_code"]
+            authenticate_kwargs['confirmation_code']
         ):
             raise exceptions.ValidationError(
-                self.error_messages["no_active_account"],
-                "no_active_account",
+                self.error_messages['no_active_account'],
+                'no_active_account',
             )
         refresh = self.get_token(self.user)
-        data = {
-            "refresh": str(refresh),
-            "access": str(refresh.access_token)
-        }
-        return data
+        return {'refresh': str(refresh), 'access': str(refresh.access_token)}
 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-            'username', 'email', 'first_name', 'last_name', 'bio', 'role',
+            'username', 'email', 'first_name', 'last_name', 'bio', 'role'
         )
+        read_only_fields = ('role',)
 
 
 class AdminUserSerializer(serializers.ModelSerializer):
