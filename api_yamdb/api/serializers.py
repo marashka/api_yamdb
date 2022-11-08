@@ -2,9 +2,9 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
-
 from rest_framework import exceptions, serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
 from reviews.models import Category, Comment, Genre, Review, Title
 from users.models import User
 
