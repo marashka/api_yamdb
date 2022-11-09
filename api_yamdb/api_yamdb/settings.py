@@ -4,9 +4,9 @@ from datetime import timedelta
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = 'p&l%385148kslhtyn^##a1)ilz@4zqj=rq&agdol^##zgl9(vs'
-# секреты не должны попадать в исходный код. 
+# секреты не должны попадать в исходный код.
 # храним их в файлах виртуальной среды.
-# так же можно поставить защиту, что если этого ключа 
+# так же можно поставить защиту, что если этого ключа
 # не находится приложение завершается с выводом соответствующей ошибки.
 # подсказка в боте =)
 
@@ -25,7 +25,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'django_filters',
-    'api.apps.ApiConfig',
+    'api.v1.apps.ApiConfig',
     'reviews.apps.ReviewsConfig',
     'users.apps.UsersConfig',
 ]
@@ -126,3 +126,5 @@ EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
 
 YAMDB_EMAIL = 'admin@yamdb.ru'
+
+TEXT_TITLE_LENGTH = 15

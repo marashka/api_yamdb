@@ -3,9 +3,10 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
 
+from api_yamdb.settings import TEXT_TITLE_LENGTH
+
 User = get_user_model()
-TEXT_TITLE_LENGTH = 15
-# отличная переменная для выноса в настройки проекта
+
 
 class Category(models.Model):
     """Категории произведений."""
@@ -14,7 +15,6 @@ class Category(models.Model):
         verbose_name='Название категории'
     )
     slug = models.SlugField(
-        max_length=50,
         unique=True,
         verbose_name='Slug категории'
     )
@@ -35,7 +35,6 @@ class Genre(models.Model):
         verbose_name='Название жанра'
     )
     slug = models.SlugField(
-        max_length=50,
         unique=True,
         verbose_name='Slug жанра'
     )
@@ -55,16 +54,15 @@ class Title(models.Model):
         max_length=256,
         verbose_name='Название'
     )
-    year = models.IntegerField(
-# а отрицательный год я тоже могу?)
-        validators=[MaxValueValidator(timezone.now().year), ],
+    year = models.PositiveSmallIntegerField(
+        validators=[MaxValueValidator(timezone.now().year)],
         verbose_name='Год выпуска'
     )
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
         null=True,
-# а бланк?+)
+        blank=True,
         related_name='titles',
         verbose_name='Категория'
     )
@@ -96,9 +94,8 @@ class GenreTitle(models.Model):
         verbose_name='Произведение'
     )
     genre = models.ForeignKey(
-# и теперь нам удалять жанр если мы титл удалим?)
         Genre,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         verbose_name='Жанр'
     )
 
@@ -118,12 +115,10 @@ class Review(models.Model):
     )
     score = models.IntegerField(
         null=True,
-# мы точно хотим добавлять коммент без оценки?)
-# тут надо сделать оценку обязательной
-        default=None,
+        blank=False,
         verbose_name='Оценка',
-        validators=[MaxValueValidator(10), MinValueValidator(1)]
-# стоит еще добавить вторым параметром человекочитаемую ошибку при валидации.
+        validators=[MaxValueValidator(10, 'Значение должно быть от 1 до 10.'),
+                    MinValueValidator(1, 'Значение должно быть от 1 до 10.')]
     )
     author = models.ForeignKey(
         User,
@@ -173,15 +168,14 @@ class Comment(models.Model):
         Review,
         on_delete=models.CASCADE,
         related_name='comments',
-        blank=True,
-# так же делаем обязательным к заполнению.
+        blank=False,
         null=True,
         verbose_name='Отзыв'
     )
     pub_date = models.DateTimeField(
-# есть прикольная фишка когда пишешь абстрактную модель 
-# и в ней определяешь это поле. и далее наследуешь от models.Model и этой абстрактной модели.
-# https://django.fun/ru/docs/django/4.1/topics/db/models/#abstract-base-classes
+        # есть прикольная фишка когда пишешь абстрактную модель
+        # и в ней определяешь это поле. и далее наследуешь от models.Model и этой абстрактной модели.
+        # https://django.fun/ru/docs/django/4.1/topics/db/models/#abstract-base-classes
         'Дата публикации',
         auto_now_add=True
     )
