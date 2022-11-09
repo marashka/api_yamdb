@@ -4,8 +4,14 @@ from datetime import timedelta
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = 'p&l%385148kslhtyn^##a1)ilz@4zqj=rq&agdol^##zgl9(vs'
+# секреты не должны попадать в исходный код. 
+# храним их в файлах виртуальной среды.
+# так же можно поставить защиту, что если этого ключа 
+# не находится приложение завершается с выводом соответствующей ошибки.
+# подсказка в боте =)
 
 DEBUG = True
+# Опять же если мы говорим про продакшен версию то тут должно быть фалс.
 
 ALLOWED_HOSTS = ['*']
 
@@ -101,7 +107,6 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
-
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],

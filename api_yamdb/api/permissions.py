@@ -6,8 +6,12 @@ class IsAdmin(BasePermission):
     def has_permission(self, request, view):
         return (request.user.is_authenticated
                 and request.user.is_admin or request.user.is_superuser)
-
+# у энд приоритет выше. значит ваше запись эквиваленте ((request.user.is_authenticated and request.user.is_admin) 
+# or request.user.is_superuser) а это явно не то что вы задумали.
     def has_object_permission(self, request, view, obj):
+# это два разных уровня примишенов. не аутентифицированного срежет верхний примишен. тут можно быть уверенным что юзер аутентифицированного. 
+# тут же проверяется доступ уже к конкретному объекту.
+# https://www.django-rest-framework.org/api-guide/permissions/
         return (request.user.is_authenticated
                 and request.user.is_admin or request.user.is_superuser)
 

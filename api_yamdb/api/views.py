@@ -26,6 +26,7 @@ class CreateListDestroyViewSet(mixins.CreateModelMixin,
                                mixins.ListModelMixin,
                                mixins.DestroyModelMixin,
                                viewsets.GenericViewSet):
+# в отдельный файл
     pass
 
 
@@ -51,9 +52,11 @@ class GenreViewSet(CreateListDestroyViewSet):
 
 class TitleViewSet(viewsets.ModelViewSet):
     """Админ может создавать тайтлы, остальные только просматривать."""
+# вот тут добавив с помощью аннотейт рейтинг можно не хило упростить сериализатор 
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
     filter_backends = [DjangoFilterBackend]
+# уже указан по умолчанию в настрйоках.
     filterset_class = TitleFilter
     permission_classes = [IsAdmin | IsReadOnly]
 
@@ -90,6 +93,7 @@ class SignUpView(APIView):
     def post(self, request):
         serializer = SignupSerializer(data=request.data)
         if serializer.is_valid():
+# обязательно ставим атрибут для отображения ошибок raise_exception=True
             user = User.objects.create_user(**serializer.validated_data)
             send_confirmation_code(user)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -116,7 +120,6 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         if not serializer.validated_data.get('role'):
-            # Тесты почему-то не пропускают, пришлось это условие добавить
             serializer.validated_data['role'] = 'user'
         User.objects.create_user(**serializer.validated_data)
 

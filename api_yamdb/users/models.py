@@ -8,6 +8,7 @@ from .manager import MyUserManager
 
 
 @deconstructible
+# Убираем в файл валидаторс пай.
 class CustomUsernameValidator(validators.RegexValidator):
     regex = r'^(?!me\b)[\w.@+-]+$'
     message = (
@@ -33,6 +34,7 @@ class User(AbstractUser):
         unique=True,
         help_text=_(
             'Required. 150 characters or fewer. '
+# пишем русский ресурс, так что все на русском.
             'Letters, digits and @/./+/-/_ only.'
         ),
         validators=[username_validator],
@@ -45,8 +47,9 @@ class User(AbstractUser):
         verbose_name='Адрес электронной почты',
     )
     bio = models.TextField(blank=True, verbose_name='Биография')
+# переносим в стиле джанго
     role = models.CharField(
-        max_length=200,
+        max_length=10,
         choices=ROLES_CHOICES,
         default=USER,
         verbose_name='Роль'
@@ -59,6 +62,8 @@ class User(AbstractUser):
 
     @property
     def is_admin(self):
+# в админы можно посчитать и супер юзеров и тех кто имеет флаг из стаф 
+# но в нашем случае из супер юзера нет так как не используется миски соответствующий.
         return self.role == self.ADMIN
 
     @property
@@ -66,5 +71,14 @@ class User(AbstractUser):
         return self.role == self.USER
 
     class Meta:
+# Нарушен код стайл Джанго.
+# The order of model inner classes and standard methods should be as follows (noting that these are not all required):
+# All database fields
+# Custom manager attributes
+# class Meta
+# def __str__()
+# def save()
+# def get_absolute_url()
+# Any custom methods
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'

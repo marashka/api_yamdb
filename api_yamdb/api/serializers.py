@@ -7,17 +7,17 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from reviews.models import Category, Comment, Genre, Review, Title
 from users.models import User
+# Документация Джанги рекомендует получать  модель User через get_user_model()
+# https://docs.djangoproject.com/en/4.0/topics/auth/customizing/#referencing-the-user-model
 
 
 class CategorySerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Category
         fields = ('name', 'slug')
 
 
 class GenreSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Genre
         fields = ('name', 'slug')
@@ -39,11 +39,14 @@ class TitleSerializer(serializers.ModelSerializer):
     category = CategoryRelatedField(
         slug_field='slug', queryset=Category.objects.all()
     )
+# все намного проще, тут можно указать описаный стерилизатор и добиться того же поведения без танцев с бубном.
+# то есть присвоив этому полю титисериалайзер получаем вывод двух полей в тех же {}
+# https://www.django-rest-framework.org/api-guide/serializers/#dealing-with-nested-objects
     genre = GenreRelatedField(
         slug_field='slug', many=True, queryset=Genre.objects.all()
     )
     rating = serializers.SerializerMethodField()
-
+#крутяк продвинутое использование орм+)
     class Meta:
         model = Title
         fields = (
@@ -76,6 +79,8 @@ class ReviewSerializer(serializers.ModelSerializer):
         title_id = self.context.get('view').kwargs.get('title_id')
         title = get_object_or_404(Title, pk=title_id)
         if request.method == 'POST':
+# Нарушен патерн:
+# https://medium.com/lemon-code/guard-clauses-3bc0cd96a2d3
             if Review.objects.filter(
                     author=request.user,
                     title=title).exists():
@@ -97,12 +102,21 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class SignupSerializer(serializers.ModelSerializer):
+# тут добавим валидацию на me и на одинаковость юзернеймов и емейлов.
+# да в модели есть но до нее дойдет после того как дрф все отработает 
+# и в итоге мы не отобразим эту ошибку что ме нельзя создавать
     class Meta:
         model = User
         fields = ('username', 'email',)
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+# Тут все так сложно выглядит. 
+# Можно проще. Тут делаем просто два поля юзернейма и конфирмейшен кода. Чисто для валидации.
+# И создаем обычную апи вьюху на пост метод.
+# И в нем сначала валидируем через этот стерилизатор пришедшие данные.
+# а дальше через отвалидированый юзер нейм тащим из бд юзера и после 
+# через чек токен проверяем токен и дальше генерит ему токен и отдаем
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['confirmation_code'] = self.fields.pop('password')
@@ -116,6 +130,7 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
             authenticate_kwargs['request'] = self.context['request']
         except KeyError:
             pass
+# это костыль. так делать нельзя. надо менять логику работы
         self.user = get_object_or_404(User, username=attrs.get('username'))
         if not default_token_generator.check_token(
             self.user,
@@ -127,6 +142,8 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
             )
         refresh = self.get_token(self.user)
         return {'refresh': str(refresh), 'access': str(refresh.access_token)}
+# по тз возвращается только токен без рефреша 
+# строго блюдем ТЗ
 
 
 class UserSerializer(serializers.ModelSerializer):

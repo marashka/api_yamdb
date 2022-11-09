@@ -5,7 +5,7 @@ from django.utils import timezone
 
 User = get_user_model()
 TEXT_TITLE_LENGTH = 15
-
+# отличная переменная для выноса в настройки проекта
 
 class Category(models.Model):
     """Категории произведений."""
@@ -56,6 +56,7 @@ class Title(models.Model):
         verbose_name='Название'
     )
     year = models.IntegerField(
+# а отрицательный год я тоже могу?)
         validators=[MaxValueValidator(timezone.now().year), ],
         verbose_name='Год выпуска'
     )
@@ -63,6 +64,7 @@ class Title(models.Model):
         Category,
         on_delete=models.SET_NULL,
         null=True,
+# а бланк?+)
         related_name='titles',
         verbose_name='Категория'
     )
@@ -94,6 +96,7 @@ class GenreTitle(models.Model):
         verbose_name='Произведение'
     )
     genre = models.ForeignKey(
+# и теперь нам удалять жанр если мы титл удалим?)
         Genre,
         on_delete=models.CASCADE,
         verbose_name='Жанр'
@@ -115,9 +118,12 @@ class Review(models.Model):
     )
     score = models.IntegerField(
         null=True,
+# мы точно хотим добавлять коммент без оценки?)
+# тут надо сделать оценку обязательной
         default=None,
         verbose_name='Оценка',
         validators=[MaxValueValidator(10), MinValueValidator(1)]
+# стоит еще добавить вторым параметром человекочитаемую ошибку при валидации.
     )
     author = models.ForeignKey(
         User,
@@ -168,10 +174,14 @@ class Comment(models.Model):
         on_delete=models.CASCADE,
         related_name='comments',
         blank=True,
+# так же делаем обязательным к заполнению.
         null=True,
         verbose_name='Отзыв'
     )
     pub_date = models.DateTimeField(
+# есть прикольная фишка когда пишешь абстрактную модель 
+# и в ней определяешь это поле. и далее наследуешь от models.Model и этой абстрактной модели.
+# https://django.fun/ru/docs/django/4.1/topics/db/models/#abstract-base-classes
         'Дата публикации',
         auto_now_add=True
     )
