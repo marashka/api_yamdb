@@ -1,33 +1,31 @@
 
 from annoying.functions import get_object_or_None
+from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, mixins, status, viewsets
+from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import (
+    AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from reviews.models import Category, Comment, Genre, Review, Title
-from users.models import User
 from api_yamdb.settings import YAMDB_EMAIL
 from .filters import TitleFilter
-from .permissions import IsAdmin, IsAuthorOrReadOnly, IsModerator, IsReadOnly
+from .mixins import CreateListDestroyViewSet
+from .permissions import (IsAdmin, IsAdminOrReadOnly,
+                          IsAdminModAuthorOrReadOnly)
 from .serializers import (AdminUserSerializer, CategorySerializer,
                           CommentSerializer, GenreSerializer,
                           MyTokenObtainPairSerializer, ReviewSerializer,
                           SignupSerializer, TitleSerializer, UserSerializer)
 
 
-class CreateListDestroyViewSet(mixins.CreateModelMixin,
-                               mixins.ListModelMixin,
-                               mixins.DestroyModelMixin,
-                               viewsets.GenericViewSet):
-# в отдельный файл
-    pass
+User = get_user_model()
 
 
 class CategoryViewSet(CreateListDestroyViewSet):
@@ -37,7 +35,7 @@ class CategoryViewSet(CreateListDestroyViewSet):
     filter_backends = [filters.SearchFilter]
     lookup_field = 'slug'
     search_fields = ['name', ]
-    permission_classes = [IsAdmin | IsReadOnly]
+    permission_classes = [IsAdminOrReadOnly]
 
 
 class GenreViewSet(CreateListDestroyViewSet):
@@ -47,23 +45,33 @@ class GenreViewSet(CreateListDestroyViewSet):
     filter_backends = [filters.SearchFilter]
     lookup_field = 'slug'
     search_fields = ['name', ]
-    permission_classes = [IsAdmin | IsReadOnly]
+    permission_classes = [IsAdminOrReadOnly]
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     """Админ может создавать тайтлы, остальные только просматривать."""
-# вот тут добавив с помощью аннотейт рейтинг можно не хило упростить сериализатор 
-    queryset = Title.objects.all()
+    queryset = Title.objects.annotate(rating=Avg('reviews__score'))
     serializer_class = TitleSerializer
-    filter_backends = [DjangoFilterBackend]
-# уже указан по умолчанию в настрйоках.
     filterset_class = TitleFilter
-    permission_classes = [IsAdmin | IsReadOnly]
+    permission_classes = [IsAdminOrReadOnly]
+
+    def perform_create(self, serializer):
+        category = get_object_or_404(
+            Category, slug=self.request.data.get('category')
+        )
+        genre = Genre.objects.filter(
+            slug__in=self.request.data.getlist('genre')
+        )
+        serializer.save(category=category, genre=genre)
+
+    def perform_update(self, serializer):
+        self.perform_create(serializer)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
-    permission_classes = [IsAdmin | IsModerator | IsAuthorOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly
+                          & IsAdminModAuthorOrReadOnly]
 
     def get_queryset(self):
         title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
@@ -76,7 +84,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
-    permission_classes = [IsAdmin | IsModerator | IsAuthorOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly
+                          & IsAdminModAuthorOrReadOnly]
 
     def get_queryset(self):
         review = get_object_or_404(Review, pk=self.kwargs.get('review_id'))
@@ -92,8 +101,7 @@ class SignUpView(APIView):
 
     def post(self, request):
         serializer = SignupSerializer(data=request.data)
-        if serializer.is_valid():
-# обязательно ставим атрибут для отображения ошибок raise_exception=True
+        if serializer.is_valid(raise_exception=True):
             user = User.objects.create_user(**serializer.validated_data)
             send_confirmation_code(user)
             return Response(serializer.data, status=status.HTTP_200_OK)
