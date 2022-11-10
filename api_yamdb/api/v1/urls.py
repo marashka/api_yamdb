@@ -38,14 +38,9 @@ router.register(
     UserViewSet,
     basename='users'
 )
-
-urlpatterns = [
-    path('', include(router.urls)),
+auth_urlpatterns = [    
     path(
         'auth/signup/',
-        # Урлы с одинаковым префиксом(Auth) выносим в отдельный
-        # список, чтобы сделать инклуд
-
         SignUpView.as_view(),
         name='signup'
     ),
@@ -54,9 +49,9 @@ urlpatterns = [
         MyTokenObtainPairView.as_view(),
         name='token_obtain_pair'
     ),
-    path(
-        'auth/token/refresh/',
-        TokenRefreshView.as_view(),
-        name='token_refresh'
-    ),
+]
+
+urlpatterns = [
+    path('', include(router.urls)),
+    path('', include(auth_urlpatterns))
 ]

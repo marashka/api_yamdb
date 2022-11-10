@@ -7,6 +7,8 @@ from rest_framework import exceptions, serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from reviews.models import Category, Comment, Genre, Review, Title
+from .validators import UserValidator
+
 
 User = get_user_model()
 
@@ -82,10 +84,11 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
 
 
-class SignupSerializer(serializers.ModelSerializer):
+class SignupSerializer(serializers.ModelSerializer, UserValidator):
     # тут добавим валидацию на me и на одинаковость юзернеймов и емейлов.
     # да в модели есть но до нее дойдет после того как дрф все отработает
     # и в итоге мы не отобразим эту ошибку что ме нельзя создавать
+
     class Meta:
         model = User
         fields = ('username', 'email',)
@@ -122,7 +125,7 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
                 'no_active_account',
             )
         refresh = self.get_token(self.user)
-        return {'refresh': str(refresh), 'access': str(refresh.access_token)}
+        return {'access': str(refresh.access_token)}
 # по тз возвращается только токен без рефреша
 # строго блюдем ТЗ
 
@@ -136,7 +139,7 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ('role',)
 
 
-class AdminUserSerializer(serializers.ModelSerializer):
+class AdminUserSerializer(serializers.ModelSerializer, UserValidator):
     class Meta:
         model = User
         fields = (

@@ -1,19 +1,25 @@
 import os
 from datetime import timedelta
+from dotenv import load_dotenv
+from core.exceptions import SecretKeyError
+
+load_dotenv()
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-SECRET_KEY = 'p&l%385148kslhtyn^##a1)ilz@4zqj=rq&agdol^##zgl9(vs'
-# секреты не должны попадать в исходный код.
-# храним их в файлах виртуальной среды.
-# так же можно поставить защиту, что если этого ключа
-# не находится приложение завершается с выводом соответствующей ошибки.
-# подсказка в боте =)
+SECRET_KEY = os.getenv('SECRET_KEY')
+if not SECRET_KEY:
+    raise SecretKeyError
+
 
 DEBUG = True
-# Опять же если мы говорим про продакшен версию то тут должно быть фалс.
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    '[::1]',
+    'testserver',
+]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
