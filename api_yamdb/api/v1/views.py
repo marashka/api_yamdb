@@ -6,12 +6,12 @@ from django.core.mail import send_mail
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import filters, status, viewsets
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework.permissions import (
     AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.views import APIView
-from rest_framework_simplejwt.views import TokenObtainPairView
 
 from reviews.models import Category, Genre, Review, Title
 from api_yamdb.settings import YAMDB_EMAIL
@@ -21,7 +21,7 @@ from .permissions import (IsAdmin, IsAdminOrReadOnly,
                           IsAdminModAuthorOrReadOnly)
 from .serializers import (AdminUserSerializer, CategorySerializer,
                           CommentSerializer, GenreSerializer,
-                          MyTokenObtainPairSerializer, ReviewSerializer,
+                          TokenSerializer, ReviewSerializer,
                           SignupSerializer, TitleSerializer, UserSerializer)
 
 
@@ -100,7 +100,6 @@ class SignUpView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        print(SignupSerializer(data=request.data))
         serializer = SignupSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             user = User.objects.create_user(**serializer.validated_data)
@@ -108,6 +107,7 @@ class SignUpView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         user = get_object_or_None(User, **serializer.initial_data)
         if user:
+            print('kek')
             send_confirmation_code(user)
             return Response(
                 'Данный пользователь уже зарегистрирован, '
@@ -117,8 +117,21 @@ class SignUpView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class MyTokenObtainPairView(TokenObtainPairView):
-    serializer_class = MyTokenObtainPairSerializer
+@api_view(["POST"])
+def get_token(request):
+    serializer = TokenSerializer(data=request.data)
+    if serializer.is_valid(raise_exception=True):
+        userrname = serializer.validated_data.get('username')
+        user = get_object_or_404(
+            User,
+            username=userrname
+        )
+        confirmation_code = serializer.validated_data.get('confirmation_code')
+        if default_token_generator.check_token(user, confirmation_code):
+            token = AccessToken.for_user(user)
+            return Response({'token': str(token)}, status=status.HTTP_200_OK)
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserViewSet(viewsets.ModelViewSet):

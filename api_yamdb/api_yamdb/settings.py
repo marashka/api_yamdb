@@ -12,7 +12,7 @@ if not SECRET_KEY:
     raise SecretKeyError
 
 
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
     'localhost',
