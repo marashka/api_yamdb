@@ -101,8 +101,13 @@ Python, Django, Django Rest Framework, PyJWT, django-filter.
 Юзер с правами администратора может отправять запросы `POST` по этим же url следующего вида: 
 - для titles: 
 `{
-  "text": "string",
-  "score": 10
+  "name": "string",
+  "year": 0,
+  "description": "string",
+  "genre": [
+    "string"
+  ],
+  "category": "string"
 }`
 - для categories и genres: 
 `{
