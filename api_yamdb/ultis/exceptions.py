@@ -3,10 +3,10 @@ from rest_framework.exceptions import APIException
 
 
 class SecretKeyError(Exception):
-    """Вызывается, когда хотя бы один из токенов невалидный."""
+    """Вызывается, когда отсутствует SECRET_KEY."""
 
     def __init__(self):
-        super().__init__('Отсутствуют один или несколько токенов.')
+        super().__init__('Отсутствует SECRET_KEY.')
 
 
 class WrongConfirmationCodeError(APIException):
