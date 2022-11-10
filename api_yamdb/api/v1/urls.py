@@ -1,10 +1,9 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
-from rest_framework_simplejwt.views import TokenRefreshView
 
 from .views import (CategoryViewSet, CommentViewSet, GenreViewSet,
-                    MyTokenObtainPairView, ReviewViewSet, SignUpView,
-                    TitleViewSet, UserViewSet)
+                    ReviewViewSet, SignUpView, TitleViewSet, UserViewSet,
+                    get_token)
 
 router = DefaultRouter()
 
@@ -38,25 +37,20 @@ router.register(
     UserViewSet,
     basename='users'
 )
-
-urlpatterns = [
-    path('', include(router.urls)),
+auth_urlpatterns = [
     path(
         'auth/signup/',
-        # Урлы с одинаковым префиксом(Auth) выносим в отдельный
-        # список, чтобы сделать инклуд
-
         SignUpView.as_view(),
         name='signup'
     ),
     path(
         'auth/token/',
-        MyTokenObtainPairView.as_view(),
-        name='token_obtain_pair'
+        get_token,
+        name='token'
     ),
-    path(
-        'auth/token/refresh/',
-        TokenRefreshView.as_view(),
-        name='token_refresh'
-    ),
+]
+
+urlpatterns = [
+    path('', include(router.urls)),
+    path('', include(auth_urlpatterns))
 ]

@@ -6,24 +6,23 @@ from django.core.mail import send_mail
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import filters, status, viewsets
-from rest_framework.decorators import action
-from rest_framework.permissions import (
-    AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly)
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.permissions import (AllowAny, IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.tokens import AccessToken
 
-from reviews.models import Category, Genre, Review, Title
 from api_yamdb.settings import YAMDB_EMAIL
+from reviews.models import Category, Genre, Review, Title
+from ultis.exceptions import WrongConfirmationCodeError
 from .filters import TitleFilter
 from .mixins import CreateListDestroyViewSet
-from .permissions import (IsAdmin, IsAdminOrReadOnly,
-                          IsAdminModAuthorOrReadOnly)
+from .permissions import IsAdmin, IsAdminModAuthorOrReadOnly, IsAdminOrReadOnly
 from .serializers import (AdminUserSerializer, CategorySerializer,
-                          CommentSerializer, GenreSerializer,
-                          MyTokenObtainPairSerializer, ReviewSerializer,
-                          SignupSerializer, TitleSerializer, UserSerializer)
-
+                          CommentSerializer, GenreSerializer, ReviewSerializer,
+                          SignupSerializer, TitleSerializer, TokenSerializer,
+                          UserSerializer)
 
 User = get_user_model()
 
@@ -101,23 +100,39 @@ class SignUpView(APIView):
 
     def post(self, request):
         serializer = SignupSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            user = User.objects.create_user(**serializer.validated_data)
-            send_confirmation_code(user)
-            return Response(serializer.data, status=status.HTTP_200_OK)
         user = get_object_or_None(User, **serializer.initial_data)
         if user:
+            print('kek')
             send_confirmation_code(user)
             return Response(
                 'Данный пользователь уже зарегистрирован, '
                 'сообщение с кодом отправлено на указанную почту',
                 status=status.HTTP_200_OK
             )
+        if serializer.is_valid(raise_exception=True):
+            user = User.objects.create_user(**serializer.validated_data)
+            send_confirmation_code(user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class MyTokenObtainPairView(TokenObtainPairView):
-    serializer_class = MyTokenObtainPairSerializer
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def get_token(request):
+    serializer = TokenSerializer(data=request.data)
+    if serializer.is_valid(raise_exception=True):
+        userrname = serializer.validated_data.get('username')
+        user = get_object_or_404(
+            User,
+            username=userrname
+        )
+        confirmation_code = serializer.validated_data.get('confirmation_code')
+        if default_token_generator.check_token(user, confirmation_code):
+            token = AccessToken.for_user(user)
+            return Response({'token': str(token)}, status=status.HTTP_200_OK)
+        else:
+            raise WrongConfirmationCodeError
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserViewSet(viewsets.ModelViewSet):

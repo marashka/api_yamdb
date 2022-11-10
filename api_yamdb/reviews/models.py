@@ -125,8 +125,6 @@ class Review(CreatedModel):
         'Текст'
     )
     score = models.IntegerField(
-        null=True,
-        blank=False,
         verbose_name='Оценка',
         validators=[MaxValueValidator(10, 'Значение должно быть от 1 до 10.'),
                     MinValueValidator(1, 'Значение должно быть от 1 до 10.')]
@@ -175,7 +173,6 @@ class Comment(CreatedModel):
         Review,
         on_delete=models.CASCADE,
         related_name='comments',
-        blank=False,
         null=True,
         verbose_name='Отзыв'
     )

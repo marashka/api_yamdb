@@ -1,7 +1,6 @@
 from django.contrib import admin
+from django.contrib.auth import get_user_model
 
-from .models import User
-# Документация Джанги рекомендует получать  модель User через get_user_model()
-# https://docs.djangoproject.com/en/4.0/topics/auth/customizing/#referencing-the-user-model
+User = get_user_model()
 
 admin.site.register(User)
