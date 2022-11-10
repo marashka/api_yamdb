@@ -8,6 +8,16 @@ from api_yamdb.settings import TEXT_TITLE_LENGTH
 User = get_user_model()
 
 
+class CreatedModel(models.Model):
+    pub_date = models.DateTimeField(
+        'Дата публикации',
+        auto_now_add=True
+    )
+
+    class Meta:
+        abstract = True
+
+
 class Category(models.Model):
     """Категории произведений."""
     name = models.CharField(
@@ -109,7 +119,7 @@ class GenreTitle(models.Model):
         return f'{self.title} в жанре {self.genre}'
 
 
-class Review(models.Model):
+class Review(CreatedModel):
     """Отзывы на произведения"""
     text = models.TextField(
         'Текст'
@@ -135,10 +145,6 @@ class Review(models.Model):
         null=True,
         verbose_name='Произведение',
     )
-    pub_date = models.DateTimeField(
-        'Дата публикации',
-        auto_now_add=True
-    )
 
     class Meta:
         verbose_name = 'Отзыв'
@@ -154,7 +160,7 @@ class Review(models.Model):
         return str(self.text[:TEXT_TITLE_LENGTH])
 
 
-class Comment(models.Model):
+class Comment(CreatedModel):
     """Комментарии к отзывам"""
     text = models.TextField(
         'Текст'
@@ -172,13 +178,6 @@ class Comment(models.Model):
         blank=False,
         null=True,
         verbose_name='Отзыв'
-    )
-    pub_date = models.DateTimeField(
-        # есть прикольная фишка когда пишешь абстрактную модель
-        # и в ней определяешь это поле. и далее наследуешь от models.Model и этой абстрактной модели.
-        # https://django.fun/ru/docs/django/4.1/topics/db/models/#abstract-base-classes
-        'Дата публикации',
-        auto_now_add=True
     )
 
     class Meta:
