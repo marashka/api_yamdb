@@ -1,4 +1,3 @@
-
 from django.core import validators
 from django.utils.deconstruct import deconstructible
 
@@ -11,4 +10,3 @@ class CustomUsernameValidator(validators.RegexValidator):
         '@/./+/-/_. Использовать имя "me" в качестве username запрещено'
     )
     flags = 0
-

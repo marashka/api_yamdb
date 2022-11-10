@@ -1,7 +1,8 @@
 import os
 from datetime import timedelta
 from dotenv import load_dotenv
-from core.exceptions import SecretKeyError
+
+from ultis.exceptions import SecretKeyError
 
 load_dotenv()
 
@@ -121,6 +122,7 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
+    'EXCEPTION_HANDLER': 'ultis.exception_handler.custom_exception_handler'
 }
 
 SIMPLE_JWT = {

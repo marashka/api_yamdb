@@ -4,7 +4,6 @@ from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
-
 from reviews.models import Category, Comment, Genre, Review, Title
 
 
@@ -89,13 +88,8 @@ class SignupSerializer(serializers.ModelSerializer):
 
 
 class TokenSerializer(serializers.ModelSerializer):
-    # Тут все так сложно выглядит.
-    # Можно проще. Тут делаем просто два поля юзернейма и конфирмейшен кода. Чисто для валидации.
-    # И создаем обычную апи вьюху на пост метод.
-    # И в нем сначала валидируем через этот стерилизатор пришедшие данные.
-    # а дальше через отвалидированый юзер нейм тащим из бд юзера и после
-    # через чек токен проверяем токен и дальше генерит ему токен и отдаем
     confirmation_code = serializers.CharField(required=True)
+    username = serializers.CharField(required=True, max_length=150)
 
     class Meta:
         model = User
