@@ -4,6 +4,9 @@ from django.db import models
 from django.utils import timezone
 
 from api_yamdb.settings import TEXT_TITLE_LENGTH
+# Нарушен код стайл Джанго.
+# Рекомендации Джанго как работать с фалом settings:
+# https://docs.djangoproject.com/en/dev/internals/contributing/writing-code/coding-style/#use-of-django-conf-settings
 
 User = get_user_model()
 

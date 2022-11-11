@@ -36,6 +36,9 @@ class TitleSerializer(serializers.ModelSerializer):
     def get_rating(self, obj):
         rating = obj.reviews.aggregate(Avg('score')).get('score__avg')
         if rating:
+# Не понял задумки, в модели поле обязательно, значит оценка будет всегда.
+# а это строчка предполагает что оценки может не быть, 0 исключен так как валидатор от 1 начинается в модели.
+# и получается какая то оценка будет и фалс точно не должно тут быть.
             return round(rating, 1)
         return rating
 

@@ -10,7 +10,7 @@ class SecretKeyError(Exception):
 
 
 class WrongConfirmationCodeError(APIException):
-    """Вызывается, когда хотя бы один из токенов невалидный."""
+    """Вызывается, когда confirmation code невалидный."""
 
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = 'Предоставлен некорректный confirmation код'

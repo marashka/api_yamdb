@@ -50,6 +50,7 @@ class GenreViewSet(CreateListDestroyViewSet):
 class TitleViewSet(viewsets.ModelViewSet):
     """Админ может создавать тайтлы, остальные только просматривать."""
     queryset = Title.objects.annotate(rating=Avg('reviews__score'))
+# так как у вас метод фиелд в сериалайзере это уже избыточно. там был комментарий либо в сериалайзере либо тут
     serializer_class = TitleSerializer
     filterset_class = TitleFilter
     permission_classes = [IsAdminOrReadOnly]
@@ -102,7 +103,6 @@ class SignUpView(APIView):
         serializer = SignupSerializer(data=request.data)
         user = get_object_or_None(User, **serializer.initial_data)
         if user:
-            print('kek')
             send_confirmation_code(user)
             return Response(
                 'Данный пользователь уже зарегистрирован, '
@@ -121,16 +121,18 @@ class SignUpView(APIView):
 def get_token(request):
     serializer = TokenSerializer(data=request.data)
     if serializer.is_valid(raise_exception=True):
-        userrname = serializer.validated_data.get('username')
+        username = serializer.validated_data.get('username')
         user = get_object_or_404(
             User,
-            username=userrname
+            username=username
         )
         confirmation_code = serializer.validated_data.get('confirmation_code')
         if default_token_generator.check_token(user, confirmation_code):
             token = AccessToken.for_user(user)
             return Response({'token': str(token)}, status=status.HTTP_200_OK)
         else:
+# Нарушен патерн:
+# https://medium.com/lemon-code/guard-clauses-3bc0cd96a2d3
             raise WrongConfirmationCodeError
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

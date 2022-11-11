@@ -37,6 +37,7 @@ router.register(
     UserViewSet,
     basename='users'
 )
+
 auth_urlpatterns = [
     path(
         'auth/signup/',
